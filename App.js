@@ -1,71 +1,88 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react';
 
 function App() {
-  const [time, setTime] = useState(1500); 
-    const [run, setrun] = useState(false);
-    const [work, setwork] = useState(0);
-    const [breakk,setbreak] = useState(0);
-    const [iswork, setiswork]= useState(true);
-    const formatTime = (seconds) => {
-          const m = Math.floor(seconds / 60);
-          const s = seconds % 60;
-          return `${m}:${s < 10 ? '0' : ''}${s}`;
-    };
-    const handlestart = () => setrun(true);
-    const handlestop = () => setrun(false);
-    const handlereset = () => {
-          setrun(false);
-          setTime(1500);
-          setiswork(true);
-        };
-    const handlesubmit = () => {
-              setTime(work * 60);
-              setiswork(true);
-            };
+  const [time, setTime] = useState(1500);
+  const [x, setx] = useState(false);
+  const [y, sety] = useState(0);
+  const [z, setz] = useState(0);
+  const [iswork, setiswork] = useState(true);
+  const alertShown = useRef(false);
 
-            useEffect(() => {
-                  let timer;
-                  if (run) {
-                    timer = setInterval(() => {
-                      setTime(prevTime => {
-                        if (prevTime <= 0) {
-                          if (iswork) {
-                            alert('Work complete');
-                          } else {
-                            alert('Break period.');
-                          }
-                          setiswork(!iswork);
-                          return iswork ? breakk * 60 : work * 60;
-                        }
-                        return prevTime - 1;
-                      });
-                    }, 1000);
-                  }
-                  return () => clearInterval(timer);
-                }, [run, iswork, work, breakk]);
+  const TimeConv = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  const Start = () => setx(true);
+  const Stop = () => setx(false);
+  const Reset = () => {
+    setx(false);
+    setTime(1500);
+    setiswork(true);
+    alertShown.current = false;
+  };
+
+  const handlesubmit = () => {
+    setTime(y * 60);
+    setiswork(true);
+  };
+
+  useEffect(() => {
+    let timer;
+    if (x) {
+      timer = setInterval(() => {
+        setTime((prevTime) => {
+          if (prevTime <= 0 && !alertShown.current) {
+            alertShown.current = true;
+            if (iswork) {
+              alert('Work complete');
+            } else {
+              alert('Break period.');
+            }
+
+           
+            if (!iswork && y && z) {
+              Reset(); 
+              return 1500; 
+            }
+
+            setiswork(!iswork);
+            return iswork ? z * 60 : y * 60;
+          }
+          if (prevTime > 0) {
+            alertShown.current = false;
+          }
+          return prevTime - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [x, iswork, y, z]);
+
   return (
-    <div class="hello">
-      <h1>{formatTime(time)}</h1>
+    <div className="main">
+      <h1>{TimeConv(time)}</h1>
       <h1>Work time</h1>
-      <button onClick={handlestart} disabled={run}>Start</button>
-      <button onClick={handlestop} disabled={!run}>Stop</button>
-      <button onClick={handlereset}>Reset</button><br/>
-      <input type="number" placeholder='Enter work time' value={work} onChange={(e) => setwork(Number(e.target.value))}
+      <button onClick={Start} disabled={x}> Start </button>
+      <button onClick={Stop} disabled={!x}> Stop </button>
+      <button onClick={Reset} disabled={!x}>Reset</button>
+      <br />
+      <input 
+        type="number" 
+        placeholder="Enter work time" 
+        value={y || ''} 
+        onChange={(e) => sety(Number(e.target.value))} 
       />
-      <input
-        type="number"
-        placeholder='Enter break time'
-        value={breakk}
-        onChange={(e) => setbreak(Number(e.target.value))}
+      <input 
+        type="number" 
+        placeholder="Enter break time" 
+        value={z || ''} 
+        onChange={(e) => setz(Number(e.target.value))} 
       />
-      <button onClick={handlesubmit}>Set</button> 
-
+      <button onClick={handlesubmit}>Set</button>
     </div>
-  )
+  );
 }
 
-export default App
-
-
-
-// export default App;
+export default App;
